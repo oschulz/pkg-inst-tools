@@ -1,0 +1,61 @@
+.SUFFIXES:
+
+.PHONY: all clean
+
+# CURRENT_DIR := $(shell pwd)
+TOP_PATH := $(dir $(firstword $(MAKEFILE_LIST) ) )
+PKG_INST_TOOLS_PKGSHARE := $(shell dirname "$(lastword $(MAKEFILE_LIST))" )
+PKG_INST_TOOLS_SHARE := $(shell dirname "$(PKG_INST_TOOLS_PKGSHARE)" )
+INST_TOOLS_PREFIX := $(shell dirname "$(PKG_INST_TOOLS_SHARE)" )
+PKG_INST_TOOLS_BIN := $(INST_TOOLS_PREFIX)/bin
+
+RULES_FILE := $(PKG_INST_TOOLS_PKGSHARE)/GNUmakefile.pkgrules
+
+INSTPKG = $(PKG_INST_TOOLS_BIN)/instpkg
+GENPKGRULES = $(PKG_INST_TOOLS_BIN)/genPkgRules.py
+MKDIR = mkdir
+
+PREFIX = $(SWMOD_INST_PREFIX)
+PKG_CONFIG_FILES := $(wildcard $(PKG_CONFIG_DIR)/*.json)
+
+all: $(INST_TOOLS_PREFIX)
+
+clean: $(INST_TOOLS_PREFIX)
+	$(RM) $(RULES_FILE)
+
+INSTALL_ALL =
+
+
+# Generic rules for package installation
+
+$(PREFIX)/bin/%-config: PKGFLAGS =
+$(PREFIX)/bin/%-config:
+	$(INSTPKG) $@ $(PKGFLAGS)
+
+$(PREFIX)/lib/pkgconfig/%.pc: PKGFLAGS =
+$(PREFIX)/lib/pkgconfig/%.pc:
+	$(INSTPKG) $@ $(PKGFLAGS)
+
+
+# Generate and include package-specific rules
+
+$(RULES_FILE): $(PKG_CONFIG_FILES)
+	$(PKG_INST_TOOLS_BIN)/genPkgRules.py $^ > $@
+
+include $(RULES_FILE)
+
+
+# Target "install"  - must be last, after $(INSTALL_ALL) is filled
+
+.PHONY: install
+install: $(INSTALL_ALL)
+
+# into target for debugging
+
+.PHONY: info
+info:
+	@echo TOP_PATH=$(TOP_PATH)
+	@echo INST_TOOLS_PREFIX=$(INST_TOOLS_PREFIX)
+	@echo PKG_CONFIG_FILES=$(PKG_CONFIG_FILES)
+	@echo INSTPKG = $(INSTPKG)
+	@echo GENPKGRULES = $(GENPKGRULES)
