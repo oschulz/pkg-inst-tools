@@ -22,7 +22,7 @@ PKGDIR="$1"
 shift 1
 
 if [ ! -d "./${PKGDIR}" ] ; then
-	PKGDIR=`basename "${PKGDIR}" | sed 's/-config$//; s/[.]pc//'`
+	PKGDIR=`basename "${PKGDIR}" | sed 's/-config$//; s/[.]pc$//; s/[.]inst$//'`
 fi
 
 test -d "${PKGDIR}"

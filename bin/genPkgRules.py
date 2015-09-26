@@ -26,6 +26,9 @@ import json
 from collections import namedtuple
 import glob
 import re
+import os.path
+
+python_version = '{}.{}'.format(sys.version_info.major, sys.version_info.minor)
 
 def ntFromJSONFile(ntName, fileName):
 	with codecs.open(fileName, encoding="utf-8") as file:
@@ -42,11 +45,24 @@ def instVar(pkgName):
 
 packages = [p for f in sys.argv[1:] for p in ntFromJSONFile("Struct", f).packages]
 
+def pkg_inst_mark(pkg):
+	if (os.path.isfile('{pkg}/setup.py'.format(pkg = pkg.name))):
+		return "$(PREFIX)/lib/python{py_v}/site-packages/{pkg}.inst".format(
+			pkg = pkg.name,
+			py_v = python_version
+		)
+	else:
+		return "$(PREFIX)/bin/{}-config".format(pkg.name)
+
+print("# Variables")
+print("PYTHON_VERSION = {}".format(python_version))
+print("")
+
 print("# Package installation detection")
 print("")
 
 for pkg in packages:
-	print("{} = $(PREFIX)/bin/{}-config".format(instVar(pkg.name), pkg.name))
+	print("{} = {}".format(instVar(pkg.name), pkg_inst_mark(pkg)))
 
 print("")
 print("# Package rules and dependencies")

@@ -26,6 +26,14 @@ clean: $(INST_TOOLS_PREFIX)
 INSTALL_ALL =
 
 
+# Generate and include package-specific rules
+
+$(RULES_FILE): $(PKG_CONFIG_FILES)
+	$(PKG_INST_TOOLS_BIN)/genPkgRules.py $^ > $@
+
+include $(RULES_FILE)
+
+
 # Generic rules for package installation
 
 $(PREFIX)/bin/%-config: PKGFLAGS =
@@ -36,13 +44,9 @@ $(PREFIX)/lib/pkgconfig/%.pc: PKGFLAGS =
 $(PREFIX)/lib/pkgconfig/%.pc:
 	$(INSTPKG) $@ $(PKGFLAGS)
 
-
-# Generate and include package-specific rules
-
-$(RULES_FILE): $(PKG_CONFIG_FILES)
-	$(PKG_INST_TOOLS_BIN)/genPkgRules.py $^ > $@
-
-include $(RULES_FILE)
+$(PREFIX)/lib/python$(PYTHON_VERSION)/site-packages/%.inst: PKGFLAGS =
+$(PREFIX)/lib/python$(PYTHON_VERSION)/site-packages/%.inst:
+	$(INSTPKG) $@ $(PKGFLAGS) && touch $@
 
 
 # Target "install"  - must be last, after $(INSTALL_ALL) is filled
